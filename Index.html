@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&amp;family=Noto+Sans+JP:wght@300;400;500;700&amp;display=swap" rel="stylesheet">
+  <script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        bark: '#2D2016',
+        cream: '#FFF8F0',
+        warm: '#E8A87C',
+        sage: '#7FB685',
+        clay: '#C4704B',
+      }
+    }
+  }
+}
+</script>
+  <style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  .font-heading { font-family: 'Zen Maru Gothic', sans-serif; }
+  .font-body { font-family: 'Noto Sans JP', sans-serif; }
+  .fade-in { animation: fadeIn 0.5s ease forwards; opacity: 0; }
+  @keyframes fadeIn { to { opacity: 1; } }
+  .slide-up { animation: slideUp 0.5s ease forwards; opacity: 0; transform: translateY(20px); }
+  @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+  .card-hover { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+  .card-hover:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(45,32,22,0.12); }
+  .paw-bg { background-image: radial-gradient(circle at 20% 80%, rgba(232,168,124,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(127,182,133,0.08) 0%, transparent 50%); }
+  .filter-chip { transition: all 0.2s ease; }
+  .filter-chip.active { background: #2D2016; color: #FFF8F0; }
+  .heart-btn { transition: all 0.2s ease; }
+  .heart-btn:hover { transform: scale(1.15); }
+  .heart-btn.liked svg { fill: #C4704B; stroke: #C4704B; }
+  .tab-active { border-bottom: 3px solid #C4704B; color: #2D2016; font-weight: 700; }
+  .match-bar { transition: width 0.8s ease; }
+  input[type="range"] { -webkit-appearance: none; appearance: none; height: 6px; border-radius: 999px; background: #E8A87C40; outline: none; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #C4704B; cursor: pointer; border: 3px solid #FFF8F0; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+  .toast { animation: toastIn 0.3s ease, toastOut 0.3s ease 2.5s forwards; }
+  @keyframes toastIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes toastOut { to { transform: translateY(20px); opacity: 0; } }
+  .modal-overlay { background: rgba(45,32,22,0.5); backdrop-filter: blur(4px); }
+  .badge { font-size: 10px; padding: 2px 8px; border-radius: 999px; font-weight: 700; text-transform: uppercase; }
+</style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-cream font-body text-bark overflow-auto">
+  <div id="app" class="h-full w-full flex flex-col">
+   <!-- Header -->
+   <header class="sticky top-0 z-40 bg-cream/95 backdrop-blur border-b border-warm/20 px-4 py-3">
+    <div class="max-w-5xl mx-auto flex items-center justify-between">
+     <div class="flex items-center gap-2">
+      <div class="w-9 h-9 bg-clay rounded-xl flex items-center justify-center">
+       <svg width="20" height="20" viewbox="0 0 24 24" fill="none" stroke="#FFF8F0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4-4-9-7-9-12a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 5-5 8-9 12z" />
+       </svg>
+      </div>
+      <h1 id="el-title" class="font-heading font-900 text-lg">Compassion Bridge</h1>
+     </div>
+     <div class="flex items-center gap-3">
+      <button id="nav-favorites" onclick="showFavorites()" class="relative p-2 rounded-full hover:bg-warm/10 transition"> <i data-lucide="heart" class="w-5 h-5"></i> <span id="fav-count" class="hidden absolute -top-1 -right-1 w-5 h-5 bg-clay text-cream text-[10px] font-bold rounded-full flex items-center justify-center">0</span> </button> <button class="p-2 rounded-full hover:bg-warm/10 transition"><i data-lucide="user" class="w-5 h-5"></i></button>
+     </div>
+    </div>
+   </header><!-- Tab Nav -->
+   <nav class="bg-cream border-b border-warm/10 px-4">
+    <div class="max-w-5xl mx-auto flex gap-6 text-sm">
+     <button onclick="switchTab('home')" id="tab-home" class="py-3 px-1 tab-active transition">Home</button> <button onclick="switchTab('browse')" id="tab-browse" class="py-3 px-1 text-bark/50 hover:text-bark transition">Browse</button> <button onclick="switchTab('match')" id="tab-match" class="py-3 px-1 text-bark/50 hover:text-bark transition">Match</button>
+    </div>
+   </nav><!-- ===== HOME TAB ===== -->
+   <main id="page-home" class="flex-1 overflow-auto">
+    <div class="max-w-5xl mx-auto px-4 py-8">
+     <!-- Hero -->
+     <section class="paw-bg rounded-3xl p-8 md:p-12 mb-8 fade-in relative overflow-hidden">
+      <div class="relative z-10 max-w-lg">
+       <p class="text-warm font-heading font-700 text-sm mb-2 tracking-wider">🐾 Pet Adoption Matching</p>
+       <h2 id="el-subtitle" class="font-heading font-900 text-3xl md:text-4xl leading-tight mb-4">Find your perfect<br>
+         furry family member</h2>
+       <p class="text-bark/60 text-sm leading-relaxed mb-6">Answer a few questions about your lifestyle and we'll match you with the perfect dog or cat. Give a rescue pet a loving home.</p><button onclick="switchTab('match')" id="el-cta" class="bg-clay text-cream font-heading font-700 px-6 py-3 rounded-2xl hover:bg-clay/90 transition inline-flex items-center gap-2 text-sm"> Start Matching <i data-lucide="arrow-right" class="w-4 h-4"></i> </button>
+      </div>
+      <div class="absolute right-4 bottom-0 opacity-10 text-[120px] leading-none select-none">
+       🐕
+      </div>
+     </section><!-- Stats -->
+     <section class="grid grid-cols-3 gap-3 mb-8">
+      <div class="bg-white rounded-2xl p-4 text-center slide-up" style="animation-delay:0.1s">
+       <p class="font-heading font-900 text-2xl text-clay">128</p>
+       <p class="text-bark/50 text-xs mt-1">New Homes</p>
+      </div>
+      <div class="bg-white rounded-2xl p-4 text-center slide-up" style="animation-delay:0.2s">
+       <p class="font-heading font-900 text-2xl text-sage">54</p>
+       <p class="text-bark/50 text-xs mt-1">Waiting Pets</p>
+      </div>
+      <div class="bg-white rounded-2xl p-4 text-center slide-up" style="animation-delay:0.3s">
+       <p class="font-heading font-900 text-2xl text-warm">96%</p>
+       <p class="text-bark/50 text-xs mt-1">Satisfaction</p>
+      </div>
+     </section><!-- New Arrivals -->
+     <section>
+      <div class="flex items-center justify-between mb-4">
+       <h3 class="font-heading font-700 text-lg">Newly Arrived 🆕</h3><button onclick="switchTab('browse')" class="text-clay text-sm font-500 hover:underline">View All</button>
+      </div>
+      <div class="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1" id="new-arrivals"></div>
+     </section>
+    </div>
+   </main><!-- ===== BROWSE TAB ===== -->
+   <main id="page-browse" class="flex-1 overflow-auto hidden">
+    <div class="max-w-5xl mx-auto px-4 py-6">
+     <!-- Search -->
+     <div class="relative mb-4">
+      <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-bark/30"></i> <input type="text" id="search-input" oninput="applyFilters()" placeholder="Search by name..." class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-warm/20 text-sm focus:outline-none focus:border-clay/50 transition">
+     </div><!-- Filter Chips: Species -->
+     <div class="flex gap-2 mb-3 flex-wrap">
+      <button onclick="toggleSpecies('all')" class="filter-chip active px-4 py-1.5 rounded-full bg-warm/10 text-xs font-600" data-species="all">All</button> <button onclick="toggleSpecies('dog')" class="filter-chip px-4 py-1.5 rounded-full bg-warm/10 text-xs font-600" data-species="dog">🐕 Dogs</button> <button onclick="toggleSpecies('cat')" class="filter-chip px-4 py-1.5 rounded-full bg-warm/10 text-xs font-600" data-species="cat">🐈 Cats</button>
+     </div><!-- Advanced Filters Toggle --> <button onclick="toggleAdvancedFilters()" id="adv-filter-btn" class="flex items-center gap-1.5 text-xs text-bark/50 hover:text-bark mb-4 transition"> <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i> Advanced Filters <i data-lucide="chevron-down" class="w-3 h-3 transition" id="adv-chevron"></i> </button>
+     <div id="advanced-filters" class="hidden bg-white rounded-2xl p-4 mb-4 border border-warm/10 space-y-4">
+      <!-- Age -->
+      <div>
+       <label class="text-xs font-600 text-bark/60 mb-1 block">Age</label>
+       <div class="flex gap-2 flex-wrap">
+        <button onclick="toggleAge('any')" class="filter-chip active px-3 py-1 rounded-full bg-sage/10 text-xs" data-age="any">Any Age</button> <button onclick="toggleAge('baby')" class="filter-chip px-3 py-1 rounded-full bg-sage/10 text-xs" data-age="baby">Puppy/Kitten (Under 1)</button> <button onclick="toggleAge('young')" class="filter-chip px-3 py-1 rounded-full bg-sage/10 text-xs" data-age="young">Young (1-3)</button> <button onclick="toggleAge('adult')" class="filter-chip px-3 py-1 rounded-full bg-sage/10 text-xs" data-age="adult">Adult (3-7)</button> <button onclick="toggleAge('senior')" class="filter-chip px-3 py-1 rounded-full bg-sage/10 text-xs" data-age="senior">Senior (7+)</button>
+       </div>
+      </div><!-- Gender -->
+      <div>
+       <label class="text-xs font-600 text-bark/60 mb-1 block">Gender</label>
+       <div class="flex gap-2">
+        <button onclick="toggleGender('any')" class="filter-chip active px-3 py-1 rounded-full bg-warm/10 text-xs" data-gender="any">Any</button> <button onclick="toggleGender('male')" class="filter-chip px-3 py-1 rounded-full bg-warm/10 text-xs" data-gender="male">♂ Male</button> <button onclick="toggleGender('female')" class="filter-chip px-3 py-1 rounded-full bg-warm/10 text-xs" data-gender="female">♀ Female</button>
+       </div>
+      </div><!-- Size -->
+      <div>
+       <label class="text-xs font-600 text-bark/60 mb-1 block">Size</label>
+       <div class="flex gap-2 flex-wrap">
+        <button onclick="toggleSize('any')" class="filter-chip active px-3 py-1 rounded-full bg-clay/10 text-xs" data-size="any">Any Size</button> <button onclick="toggleSize('small')" class="filter-chip px-3 py-1 rounded-full bg-clay/10 text-xs" data-size="small">Small</button> <button onclick="toggleSize('medium')" class="filter-chip px-3 py-1 rounded-full bg-clay/10 text-xs" data-size="medium">Medium</button> <button onclick="toggleSize('large')" class="filter-chip px-3 py-1 rounded-full bg-clay/10 text-xs" data-size="large">Large</button>
+       </div>
+      </div><!-- Personality -->
+      <div>
+       <label class="text-xs font-600 text-bark/60 mb-1 block">Personality</label>
+       <div class="flex gap-2 flex-wrap" id="personality-chips"></div>
+      </div>
+     </div><!-- Results -->
+     <p class="text-xs text-bark/40 mb-3"><span id="result-count">0</span> results</p>
+     <div class="grid grid-cols-2 md:grid-cols-3 gap-3" id="pet-grid"></div>
+    </div>
+   </main><!-- ===== MATCH TAB ===== -->
+   <main id="page-match" class="flex-1 overflow-auto hidden">
+    <div class="max-w-lg mx-auto px-4 py-8" id="match-container">
+     <!-- Quiz -->
+     <div id="quiz-section">
+      <div class="text-center mb-8 fade-in">
+       <div class="w-16 h-16 bg-sage/10 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+        🔍
+       </div>
+       <h2 class="font-heading font-900 text-xl mb-2">Lifestyle Quiz</h2>
+       <p class="text-bark/50 text-sm">Answer a few questions to discover your perfect match</p>
+      </div>
+      <div id="quiz-progress" class="w-full h-1.5 bg-warm/10 rounded-full mb-6 overflow-hidden">
+       <div id="quiz-bar" class="h-full bg-clay rounded-full match-bar" style="width:0%"></div>
+      </div>
+      <div id="quiz-body"></div>
+     </div><!-- Results (hidden initially) -->
+     <div id="match-results" class="hidden"></div>
+    </div>
+   </main><!-- Pet Detail Modal -->
+   <div id="pet-modal" class="fixed inset-0 z-50 hidden">
+    <div class="modal-overlay absolute inset-0" onclick="closeModal()"></div>
+    <div class="absolute inset-x-0 bottom-0 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[440px] bg-cream rounded-t-3xl md:rounded-3xl max-h-[85%] overflow-auto z-10" id="modal-content"></div>
+   </div><!-- Favorites Drawer -->
+   <div id="fav-drawer" class="fixed inset-0 z-50 hidden">
+    <div class="modal-overlay absolute inset-0" onclick="closeFavorites()"></div>
+    <div class="absolute right-0 top-0 bottom-0 w-full max-w-sm bg-cream z-10 overflow-auto p-6">
+     <div class="flex items-center justify-between mb-6">
+      <h3 class="font-heading font-700 text-lg">お気に入り ❤️</h3><button onclick="closeFavorites()" class="p-2 hover:bg-warm/10 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
+     </div>
+     <div id="fav-list"></div>
+    </div>
+   </div><!-- Toast Container -->
+   <div id="toast-container" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2"></div>
+  </div>
+  <script>
+// ===== DATA =====
+const pets = [
+  { id:1, name:'Hana', species:'dog', breed:'Shiba Inu', age:2, ageGroup:'young', gender:'female', size:'medium', personality:['calm','friendly','intelligent'], description:'A gentle Shiba Inu who loves walks and enjoys being around people. Perfect for an active household.', neutered:true, vaccinated:true, emoji:'🐕', color:'bg-amber-100' },
+  { id:2, name:'Sora', species:'cat', breed:'Tabby', age:1, ageGroup:'young', gender:'male', size:'small', personality:['curious','affectionate','playful'], description:'Very playful and full of curiosity. Loves lap cuddles and interactive toys. Great for families!', neutered:true, vaccinated:true, emoji:'🐈', color:'bg-orange-100' },
+  { id:3, name:'Momo', species:'dog', breed:'Toy Poodle', age:5, ageGroup:'adult', gender:'female', size:'small', personality:['calm','affectionate','gentle'], description:'A calm and gentle soul. Recommended for first-time pet owners. Perfect for apartment living.', neutered:true, vaccinated:true, emoji:'🐩', color:'bg-pink-100' },
+  { id:4, name:'Riku', species:'dog', breed:'Labrador', age:3, ageGroup:'adult', gender:'male', size:'large', personality:['energetic','friendly','intelligent'], description:'Full of energy and enthusiasm. Needs an active home with a yard. Loves fetch and outdoor adventures!', neutered:true, vaccinated:true, emoji:'🦮', color:'bg-yellow-100' },
+  { id:5, name:'Mike', species:'cat', breed:'Calico', age:8, ageGroup:'senior', gender:'female', size:'small', personality:['calm','quiet','independent'], description:'A calm senior cat. Prefers a quiet environment where she can relax at her own pace.', neutered:true, vaccinated:true, emoji:'🐱', color:'bg-emerald-100' },
+  { id:6, name:'Tetsu', species:'dog', breed:'Mixed', age:0.5, ageGroup:'baby', gender:'male', size:'medium', personality:['energetic','curious','affectionate'], description:'A playful puppy full of energy and curiosity! Every day is an adventure. Training-friendly household needed.', neutered:false, vaccinated:true, emoji:'🐶', color:'bg-sky-100' },
+];
+
+const allPersonalities = [...new Set(pets.flatMap(p => p.personality))];
+
+const quizQuestions = [
+  { q:'What type of home do you have?', opts:[{t:'Apartment',v:'apartment'},{t:'House with yard',v:'house'},{t:'House without yard',v:'house_no'}] },
+  { q:'How much time are you home during the day?', opts:[{t:'Almost always',v:'home'},{t:'Half the day',v:'half'},{t:'Mostly away',v:'away'}] },
+  { q:'How much daily exercise can you provide?', opts:[{t:'1+ hour walks daily',v:'long'},{t:'30 min daily',v:'medium'},{t:'Very little',v:'short'}] },
+  { q:'What\'s your pet experience level?', opts:[{t:'First time pet owner',v:'first'},{t:'Some experience',v:'some'},{t:'Very experienced',v:'experienced'}] },
+  { q:'What type of relationship do you want?', opts:[{t:'Active & playful companion',v:'active'},{t:'Calm & comforting friend',v:'calm'},{t:'Independent partner',v:'partner'}] },
+];
+
+// ===== STATE =====
+let favorites = new Set();
+let currentFilter = { species:'all', age:'any', gender:'any', size:'any', personality:null, search:'' };
+let quizStep = 0;
+let quizAnswers = [];
+
+// ===== ELEMENT SDK =====
+const defaultConfig = {
+  app_title: 'PawMatch',
+  hero_subtitle: 'Find your perfect furry friend',
+  cta_button_text: 'Start Matching',
+  background_color: '#FFF8F0',
+  surface_color: '#FFFFFF',
+  text_color: '#2D2016',
+  primary_action_color: '#C4704B',
+  secondary_action_color: '#7FB685',
+  font_family: 'Zen Maru Gothic',
+  font_size: 14,
+};
+
+function applyConfig(config) {
+  const c = { ...defaultConfig, ...config };
+  document.getElementById('el-title').textContent = c.app_title;
+  document.getElementById('el-subtitle').innerHTML = c.hero_subtitle.replace(/\n/g,'<br>');
+  document.getElementById('el-cta').innerHTML = c.cta_button_text + ' <i data-lucide="arrow-right" class="w-4 h-4"></i>';
+
+  document.body.style.backgroundColor = c.background_color;
+  document.documentElement.style.setProperty('--bg', c.background_color);
+  document.querySelectorAll('.bg-cream').forEach(el => el.style.backgroundColor = c.background_color);
+  document.querySelectorAll('.bg-white, [data-surface]').forEach(el => el.style.backgroundColor = c.surface_color);
+  document.body.style.color = c.text_color;
+
+  document.querySelectorAll('.bg-clay, [data-primary]').forEach(el => { el.style.backgroundColor = c.primary_action_color; });
+  document.querySelectorAll('.text-clay').forEach(el => el.style.color = c.primary_action_color);
+  document.querySelectorAll('.text-sage, [data-secondary-text]').forEach(el => el.style.color = c.secondary_action_color);
+
+  const ff = c.font_family + ", 'Noto Sans JP', sans-serif";
+  document.querySelectorAll('.font-heading').forEach(el => el.style.fontFamily = ff);
+  document.body.style.fontFamily = `'Noto Sans JP', ${c.font_family}, sans-serif`;
+  const bs = c.font_size;
+  document.body.style.fontSize = bs + 'px';
+
+  lucide.createIcons();
+}
+
+window.elementSdk.init({
+  defaultConfig,
+  onConfigChange: async (config) => applyConfig(config),
+  mapToCapabilities: (config) => ({
+    recolorables: [
+      { get:()=>config.background_color||defaultConfig.background_color, set:(v)=>{config.background_color=v;window.elementSdk.setConfig({background_color:v})} },
+      { get:()=>config.surface_color||defaultConfig.surface_color, set:(v)=>{config.surface_color=v;window.elementSdk.setConfig({surface_color:v})} },
+      { get:()=>config.text_color||defaultConfig.text_color, set:(v)=>{config.text_color=v;window.elementSdk.setConfig({text_color:v})} },
+      { get:()=>config.primary_action_color||defaultConfig.primary_action_color, set:(v)=>{config.primary_action_color=v;window.elementSdk.setConfig({primary_action_color:v})} },
+      { get:()=>config.secondary_action_color||defaultConfig.secondary_action_color, set:(v)=>{config.secondary_action_color=v;window.elementSdk.setConfig({secondary_action_color:v})} },
+    ],
+    borderables: [],
+    fontEditable: { get:()=>config.font_family||defaultConfig.font_family, set:(v)=>{config.font_family=v;window.elementSdk.setConfig({font_family:v})} },
+    fontSizeable: { get:()=>config.font_size||defaultConfig.font_size, set:(v)=>{config.font_size=v;window.elementSdk.setConfig({font_size:v})} },
+  }),
+  mapToEditPanelValues: (config) => new Map([
+    ['app_title', config.app_title || defaultConfig.app_title],
+    ['hero_subtitle', config.hero_subtitle || defaultConfig.hero_subtitle],
+    ['cta_button_text', config.cta_button_text || defaultConfig.cta_button_text],
+  ]),
+});
+
+// ===== TABS =====
+function switchTab(tab) {
+  ['home','browse','match'].forEach(t => {
+    document.getElementById('page-'+t).classList.toggle('hidden', t!==tab);
+    const tabBtn = document.getElementById('tab-'+t);
+    if(t===tab){ tabBtn.classList.add('tab-active'); tabBtn.classList.remove('text-bark/50'); }
+    else { tabBtn.classList.remove('tab-active'); tabBtn.classList.add('text-bark/50'); }
+  });
+  if(tab==='browse') renderPetGrid();
+  if(tab==='match') { quizStep=0; quizAnswers=[]; renderQuiz(); }
+}
+
+// ===== RENDER HELPERS =====
+function petCard(pet, compact) {
+  const liked = favorites.has(pet.id);
+  if(compact) return `
+    <div class="flex-shrink-0 w-36 bg-white rounded-2xl overflow-hidden card-hover cursor-pointer" data-surface onclick="openModal(${pet.id})">
+      <div class="${pet.color} h-28 flex items-center justify-center text-5xl">${pet.emoji}</div>
+      <div class="p-3">
+        <div class="flex items-center justify-between">
+          <p class="font-heading font-700 text-sm">${pet.name}</p>
+          <span class="text-[10px] text-bark/40">${pet.gender==='male'?'♂':'♀'}</span>
+        </div>
+        <p class="text-[10px] text-bark/40 mt-0.5">${pet.breed}・${pet.age<1?Math.round(pet.age*12)+'mo':pet.age+'yr'}</p>
+      </div>
+    </div>`;
+  return `
+    <div class="bg-white rounded-2xl overflow-hidden card-hover cursor-pointer" data-surface onclick="openModal(${pet.id})">
+      <div class="${pet.color} h-32 flex items-center justify-center text-5xl relative">
+        ${pet.emoji}
+        <button onclick="event.stopPropagation();toggleFav(${pet.id})" class="heart-btn absolute top-2 right-2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center ${liked?'liked':''}">
+          <i data-lucide="heart" class="w-4 h-4 ${liked?'text-clay':'text-bark/30'}"></i>
+        </button>
+        ${pet.ageGroup==='baby'?'<span class="badge absolute top-2 left-2 bg-sage text-cream">NEW</span>':''}
+      </div>
+      <div class="p-3">
+        <div class="flex items-center justify-between mb-1">
+          <p class="font-heading font-700 text-sm">${pet.name}</p>
+          <span class="text-[10px] text-bark/40">${pet.gender==='male'?'♂ Male':'♀ Female'}</span>
+        </div>
+        <p class="text-[10px] text-bark/40">${pet.breed}・${pet.age<1?Math.round(pet.age*12)+'mo':pet.age+'yr'}・${pet.size==='small'?'Small':pet.size==='medium'?'Medium':'Large'}</p>
+        <div class="flex gap-1 mt-2 flex-wrap">${pet.personality.slice(0,2).map(p=>`<span class="text-[9px] bg-warm/10 text-bark/60 px-2 py-0.5 rounded-full">${p}</span>`).join('')}</div>
+      </div>
+    </div>`;
+}
+
+function renderNewArrivals() {
+  document.getElementById('new-arrivals').innerHTML = pets.slice(0,4).map(p => petCard(p, true)).join('');
+  lucide.createIcons();
+}
+
+function renderPetGrid() {
+  const f = currentFilter;
+  const search = f.search.toLowerCase();
+  let filtered = pets.filter(p => {
+    if(f.species!=='all' && p.species!==f.species) return false;
+    if(f.age!=='any' && p.ageGroup!==f.age) return false;
+    if(f.gender!=='any' && p.gender!==f.gender) return false;
+    if(f.size!=='any' && p.size!==f.size) return false;
+    if(f.personality && !p.personality.includes(f.personality)) return false;
+    if(search && !p.name.toLowerCase().includes(search) && !p.breed.toLowerCase().includes(search)) return false;
+    return true;
+  });
+  document.getElementById('result-count').textContent = filtered.length;
+  document.getElementById('pet-grid').innerHTML = filtered.length ? filtered.map(p=>petCard(p,false)).join('') : '<p class="col-span-full text-center text-bark/30 py-12 text-sm">条件に合う子が見つかりませんでした 😢</p>';
+  lucide.createIcons();
+}
+
+function renderPersonalityChips() {
+  document.getElementById('personality-chips').innerHTML = [
+    {k:null,l:'指定なし'}, ...allPersonalities.map(p=>({k:p,l:p}))
+  ].map(p => `<button onclick="togglePersonality(${p.k?`'${p.k}'`:'null'})" class="filter-chip ${currentFilter.personality===p.k||(p.k===null&&!currentFilter.personality)?'active':''} px-3 py-1 rounded-full bg-warm/10 text-xs" data-pers="${p.k}">${p.l}</button>`).join('');
+}
+
+// ===== FILTERS =====
+function setChip(selector, val, group) {
+  document.querySelectorAll(`[data-${group}]`).forEach(b => { b.classList.remove('active'); });
+  document.querySelector(`[data-${group}="${val}"]`).classList.add('active');
+}
+function toggleSpecies(v){ currentFilter.species=v; setChip(null,v,'species'); applyFilters(); }
+function toggleAge(v){ currentFilter.age=v; setChip(null,v,'age'); applyFilters(); }
+function toggleGender(v){ currentFilter.gender=v; setChip(null,v,'gender'); applyFilters(); }
+function toggleSize(v){ currentFilter.size=v; setChip(null,v,'size'); applyFilters(); }
+function togglePersonality(v){ currentFilter.personality=v; renderPersonalityChips(); applyFilters(); }
+function applyFilters(){ currentFilter.search=document.getElementById('search-input')?.value||''; renderPetGrid(); }
+function toggleAdvancedFilters(){ const el=document.getElementById('advanced-filters'); el.classList.toggle('hidden'); document.getElementById('adv-chevron').style.transform=el.classList.contains('hidden')?'':'rotate(180deg)'; }
+
+// ===== FAVORITES =====
+function toggleFav(id) {
+  if(favorites.has(id)) { favorites.delete(id); showToast('お気に入りから削除しました'); }
+  else { favorites.add(id); showToast('お気に入りに追加しました ❤️'); }
+  updateFavCount(); renderPetGrid();
+}
+function updateFavCount() {
+  const el = document.getElementById('fav-count');
+  if(favorites.size>0){ el.classList.remove('hidden'); el.textContent=favorites.size; } else el.classList.add('hidden');
+}
+function showFavorites(){ document.getElementById('fav-drawer').classList.remove('hidden'); renderFavList(); }
+function closeFavorites(){ document.getElementById('fav-drawer').classList.add('hidden'); }
+function renderFavList(){
+  const list = document.getElementById('fav-list');
+  if(!favorites.size){ list.innerHTML='<p class="text-bark/30 text-sm text-center py-8">まだお気に入りがありません</p>'; return; }
+  list.innerHTML = [...favorites].map(id => { const p=pets.find(x=>x.id===id); return `
+    <div class="flex items-center gap-3 p-3 bg-white rounded-xl mb-2 cursor-pointer" data-surface onclick="closeModal();closeFavorites();openModal(${p.id})">
+      <div class="${p.color} w-12 h-12 rounded-xl flex items-center justify-center text-2xl">${p.emoji}</div>
+      <div class="flex-1"><p class="font-heading font-700 text-sm">${p.name}</p><p class="text-[10px] text-bark/40">${p.breed}</p></div>
+      <button onclick="event.stopPropagation();toggleFav(${p.id});renderFavList()" class="text-clay"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>`; }).join('');
+  lucide.createIcons();
+}
+
+// ===== MODAL =====
+function openModal(id) {
+  const p = pets.find(x=>x.id===id);
+  const liked = favorites.has(id);
+  document.getElementById('modal-content').innerHTML = `
+    <div class="${p.color} h-48 flex items-center justify-center text-7xl relative">
+      ${p.emoji}
+      <button onclick="closeModal()" class="absolute top-3 right-3 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div class="p-6">
+      <div class="flex items-start justify-between mb-3">
+        <div>
+          <h3 class="font-heading font-900 text-xl">${p.name}</h3>
+          <p class="text-bark/50 text-xs">${p.breed}・${p.gender==='male'?'♂ Male':'♀ Female'}・${p.age<1?Math.round(p.age*12)+'mo':p.age+'yr'}</p>
+        </div>
+        <button onclick="toggleFav(${p.id});openModal(${p.id})" class="heart-btn w-10 h-10 rounded-full border-2 ${liked?'border-clay bg-clay/5':'border-warm/20'} flex items-center justify-center ${liked?'liked':''}">
+          <i data-lucide="heart" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="flex gap-2 mb-4">${p.personality.map(t=>`<span class="text-xs bg-warm/10 text-bark/70 px-3 py-1 rounded-full">${t}</span>`).join('')}</div>
+      <p class="text-sm text-bark/70 leading-relaxed mb-4">${p.description}</p>
+      <div class="grid grid-cols-3 gap-2 mb-5">
+        <div class="bg-sage/10 rounded-xl p-2 text-center"><p class="text-[10px] text-bark/40">Size</p><p class="text-xs font-700 mt-0.5">${p.size==='small'?'Small':p.size==='medium'?'Medium':'Large'}</p></div>
+        <div class="bg-warm/10 rounded-xl p-2 text-center"><p class="text-[10px] text-bark/40">Spayed/Neutered</p><p class="text-xs font-700 mt-0.5">${p.neutered?'Yes':'No'}</p></div>
+        <div class="bg-clay/10 rounded-xl p-2 text-center"><p class="text-[10px] text-bark/40">Vaccinated</p><p class="text-xs font-700 mt-0.5">${p.vaccinated?'Yes':'No'}</p></div>
+      </div>
+      <button onclick="showToast('Inquiry submitted! 🎉');closeModal()" class="w-full bg-clay text-cream font-heading font-700 py-3 rounded-2xl text-sm hover:bg-clay/90 transition flex items-center justify-center gap-2" data-primary>
+        <i data-lucide="message-circle" class="w-4 h-4"></i> Inquire About This Pet
+      </button>
+    </div>`;
+  document.getElementById('pet-modal').classList.remove('hidden');
+  lucide.createIcons();
+}
+function closeModal(){ document.getElementById('pet-modal').classList.add('hidden'); }
+
+// ===== QUIZ =====
+function renderQuiz() {
+  if(quizStep >= quizQuestions.length) { showMatchResults(); return; }
+  const pct = ((quizStep)/quizQuestions.length)*100;
+  document.getElementById('quiz-bar').style.width = pct+'%';
+  const q = quizQuestions[quizStep];
+  document.getElementById('quiz-body').innerHTML = `
+    <div class="slide-up">
+      <p class="text-xs text-bark/40 mb-1">${quizStep+1} / ${quizQuestions.length}</p>
+      <h3 class="font-heading font-700 text-lg mb-4">${q.q}</h3>
+      <div class="space-y-2">
+        ${q.opts.map((o,i) => `<button onclick="answerQuiz('${o.v}')" class="w-full text-left p-4 bg-white rounded-2xl border border-warm/10 hover:border-clay/40 transition text-sm font-500" data-surface>${o.t}</button>`).join('')}
+      </div>
+    </div>`;
+  document.getElementById('quiz-section').classList.remove('hidden');
+  document.getElementById('match-results').classList.add('hidden');
+}
+function answerQuiz(v) { quizAnswers.push(v); quizStep++; renderQuiz(); }
+
+function showMatchResults() {
+  document.getElementById('quiz-bar').style.width = '100%';
+  document.getElementById('quiz-section').classList.add('hidden');
+  document.getElementById('match-results').classList.remove('hidden');
+
+  // Simple scoring
+  let scores = pets.map(p => {
+    let s = 50;
+    const a = quizAnswers;
+    // housing
+    if(a[0]==='apartment' && p.size==='small') s+=15; else if(a[0]==='house' && p.size==='large') s+=15; else s+=5;
+    // at home
+    if(a[1]==='home') s+=10; else if(a[1]==='away' && p.species==='cat') s+=10; else s+=5;
+    // walks
+    if(a[2]==='long' && p.personality.includes('活発')) s+=15; else if(a[2]==='short' && p.personality.includes('穏やか')) s+=15; else s+=5;
+    // experience
+    if(a[3]==='first' && p.personality.includes('穏やか')) s+=10; else if(a[3]==='experienced') s+=10; else s+=5;
+    // relationship
+    if(a[4]==='active' && p.personality.includes('活発')) s+=10; else if(a[4]==='calm' && p.personality.includes('穏やか')) s+=10; else s+=5;
+    return { pet:p, score: Math.min(s, 98) };
+  }).sort((a,b) => b.score - a.score).slice(0,3);
+
+  document.getElementById('match-results').innerHTML = `
+    <div class="text-center mb-6 fade-in">
+      <div class="text-5xl mb-3">🎉</div>
+      <h2 class="font-heading font-900 text-xl mb-1">マッチング結果</h2>
+      <p class="text-bark/50 text-sm">あなたにおすすめの子たちです</p>
+    </div>
+    <div class="space-y-3">
+      ${scores.map((s,i) => `
+        <div class="bg-white rounded-2xl p-4 card-hover cursor-pointer slide-up flex items-center gap-4" data-surface style="animation-delay:${i*0.15}s" onclick="openModal(${s.pet.id})">
+          <div class="${s.pet.color} w-16 h-16 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0">${s.pet.emoji}</div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <p class="font-heading font-700">${s.pet.name}</p>
+              ${i===0?'<span class="badge bg-clay text-cream">BEST</span>':''}
+            </div>
+            <p class="text-[10px] text-bark/40 mb-2">${s.pet.breed}・${s.pet.age<1?s.pet.age*12+'ヶ月':s.pet.age+'歳'}</p>
+            <div class="flex items-center gap-2">
+              <div class="flex-1 h-1.5 bg-warm/10 rounded-full overflow-hidden"><div class="h-full ${i===0?'bg-clay':'bg-sage'} rounded-full match-bar" style="width:0%" data-target="${s.score}"></div></div>
+              <span class="text-xs font-700 ${i===0?'text-clay':'text-sage'}">${s.score}%</span>
+            </div>
+          </div>
+        </div>`).join('')}
+    </div>
+    <button onclick="quizStep=0;quizAnswers=[];renderQuiz()" class="w-full mt-6 py-3 border-2 border-warm/20 rounded-2xl text-sm font-heading font-700 hover:bg-warm/5 transition flex items-center justify-center gap-2">
+      <i data-lucide="refresh-cw" class="w-4 h-4"></i> もう一度診断する
+    </button>`;
+  lucide.createIcons();
+  // Animate bars
+  setTimeout(()=>{ document.querySelectorAll('[data-target]').forEach(el => el.style.width = el.dataset.target+'%'); }, 300);
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast bg-bark text-cream px-4 py-2.5 rounded-xl text-xs font-500 shadow-lg';
+  t.textContent = msg;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(()=>t.remove(), 3000);
+}
+
+// ===== INIT =====
+renderNewArrivals();
+renderPersonalityChips();
+renderPetGrid();
+lucide.createIcons();
+</script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9ecaf8e40397f1c8',t:'MTc3NjI1NjMzOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
